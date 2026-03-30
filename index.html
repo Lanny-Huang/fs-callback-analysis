@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FS Expert → Customer Callback Analysis | TY25</title>
+<title>FS Appointment: Missed Call → Customer Callback Analysis | TY25</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root {
@@ -11,35 +11,32 @@
     --border: #2e3345; --text: #e2e4ea; --muted: #8b8fa3;
     --accent: #a5b4fc; --accent2: #818cf8; --green: #34d399;
     --amber: #fbbf24; --red: #f87171; --cyan: #22d3ee;
+    --purple: #c084fc;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-  .container { max-width: 1080px; margin: 0 auto; padding: 24px 20px 60px; }
-  a.back { display: inline-block; color: var(--muted); text-decoration: none; font-size: 13px; margin-bottom: 16px; }
-  a.back:hover { color: var(--accent); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
   header { margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-  header h1 { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
-  header .subtitle { color: var(--muted); font-size: 14px; }
+  header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  header .subtitle { color: var(--muted); font-size: 14px; max-width: 720px; }
   .tag { display: inline-block; background: var(--surface2); color: var(--accent); font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 4px; }
 
-  /* Headline card */
   .headline { background: linear-gradient(135deg, #1e2235 0%, #1a1d27 100%); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; margin-bottom: 28px; }
-  .headline .big-num { font-size: 56px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .headline .big-num { font-size: 56px; font-weight: 800; color: var(--red); line-height: 1; }
   .headline .big-label { font-size: 16px; color: var(--muted); margin-top: 4px; }
-  .headline .context { font-size: 14px; color: var(--text); margin-top: 12px; max-width: 640px; }
+  .headline .context { font-size: 14px; color: var(--text); margin-top: 12px; max-width: 700px; }
 
-  /* KPI strip */
-  .kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
-  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; text-align: center; }
-  .kpi .val { font-size: 28px; font-weight: 700; }
-  .kpi .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; text-align: center; }
+  .kpi .val { font-size: 26px; font-weight: 700; }
+  .kpi .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
   .kpi.green .val { color: var(--green); }
   .kpi.amber .val { color: var(--amber); }
   .kpi.red .val { color: var(--red); }
   .kpi.cyan .val { color: var(--cyan); }
   .kpi.accent .val { color: var(--accent); }
+  .kpi.purple .val { color: var(--purple); }
 
-  /* Cards & charts */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 20px; }
   .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
   .card h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--accent); }
@@ -47,18 +44,29 @@
   .chart-wrap { position: relative; height: 280px; }
   @media (max-width: 700px) { .chart-row { grid-template-columns: 1fr; } }
 
-  /* Tables */
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--border); color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
   td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
   tr:last-child td { border-bottom: none; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
   .highlight { color: var(--accent); font-weight: 600; }
+  .h-green { color: var(--green); font-weight: 600; }
+  .h-amber { color: var(--amber); font-weight: 600; }
+  .h-red { color: var(--red); font-weight: 600; }
 
-  /* Insight callout */
   .insight { background: rgba(165, 180, 252, 0.08); border-left: 3px solid var(--accent); padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14px; }
 
-  /* Methodology */
+  .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0; margin: 20px 0; flex-wrap: wrap; }
+  .flow-node { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; text-align: center; min-width: 120px; }
+  .flow-node .fn-val { font-size: 22px; font-weight: 700; }
+  .flow-node .fn-lbl { font-size: 11px; color: var(--muted); }
+  .flow-arrow { color: var(--muted); font-size: 22px; padding: 0 6px; }
+  .flow-node.green { border-color: var(--green); } .flow-node.green .fn-val { color: var(--green); }
+  .flow-node.amber { border-color: var(--amber); } .flow-node.amber .fn-val { color: var(--amber); }
+  .flow-node.red { border-color: var(--red); } .flow-node.red .fn-val { color: var(--red); }
+  .flow-node.accent { border-color: var(--accent); } .flow-node.accent .fn-val { color: var(--accent); }
+  .flow-node.purple { border-color: var(--purple); } .flow-node.purple .fn-val { color: var(--purple); }
+
   details { margin-top: 20px; }
   summary { cursor: pointer; color: var(--muted); font-size: 13px; }
   details[open] summary { margin-bottom: 10px; }
@@ -69,129 +77,155 @@
 </head>
 <body>
 <div class="container">
+
 <header>
-  <h1>FS Expert → Customer Callback Analysis</h1>
-  <div class="subtitle">When the expert calls during an appointment and the customer doesn't answer, how often does the customer call back?</div>
+  <h1>FS Appointment Missed Call Analysis</h1>
+  <div class="subtitle">When an expert calls a customer during a Full Service appointment and the customer doesn't answer: how often does the customer call back? How quickly does the expert retry? What happens to these customers?</div>
   <div style="margin-top: 8px;">
     <span class="tag">Full Service</span>
     <span class="tag">Appointments</span>
-    <span class="tag">CCT</span>
-    <span class="tag">TY25</span>
+    <span class="tag">CCT Call-Level</span>
+    <span class="tag">TYTD (Nov '25 – Mar '26)</span>
   </div>
 </header>
 
 <!-- Headline -->
 <div class="headline">
-  <div class="big-num">~3.6%</div>
-  <div class="big-label">of customers call the expert back after a missed outbound call</div>
+  <div class="big-num">~0.9%</div>
+  <div class="big-label">of customers call the expert back after missing an FS appointment call</div>
   <div class="context">
-    Out of 36,040 expert-initiated calls (outbound voice + system callbacks) where the customer didn't answer,
-    only 1,288 resulted in the customer placing an inbound call on the same engagement.
-    When they do call back, 85% do so within 30 minutes.
+    Out of 1,050 FS appointment calls where the expert called and the customer didn't answer,
+    only 9 resulted in the customer placing an inbound call on the same engagement.
+    However, <strong>64% of these customers eventually talk to an expert</strong> through a later FS call — 
+    the system handles re-engagement, not the customer.
   </div>
 </div>
 
 <!-- KPI strip -->
 <div class="kpi-strip">
   <div class="kpi amber">
-    <div class="val">36,040</div>
-    <div class="lbl">Expert Calls<br>Customer Missed</div>
+    <div class="val">1,050</div>
+    <div class="lbl">FS Appt Calls<br>Customer Missed</div>
   </div>
   <div class="kpi red">
-    <div class="val">1,288</div>
+    <div class="val">9</div>
     <div class="lbl">Customer<br>Called Back</div>
   </div>
   <div class="kpi accent">
-    <div class="val">3.6%</div>
-    <div class="lbl">Callback Rate<br>(per missed call)</div>
+    <div class="val">0.9%</div>
+    <div class="lbl">Customer<br>Callback Rate</div>
   </div>
   <div class="kpi cyan">
-    <div class="val">84.7%</div>
-    <div class="lbl">Callbacks Within<br>30 Minutes</div>
+    <div class="val">11%</div>
+    <div class="lbl">Expert Retried<br>(same engagement)</div>
   </div>
   <div class="kpi green">
-    <div class="val">26,682</div>
-    <div class="lbl">Unique Engagements<br>with Missed Call</div>
+    <div class="val">64%</div>
+    <div class="lbl">Later FS Call<br>Handled</div>
+  </div>
+  <div class="kpi purple">
+    <div class="val">943</div>
+    <div class="lbl">Unique Customers<br>Affected</div>
   </div>
 </div>
 
-<!-- Chart Row 1: Callback Rate by Type + Timing -->
-<div class="chart-row">
-  <div class="card">
-    <h2>Callback Rate by Missed Call Type</h2>
-    <div class="chart-wrap"><canvas id="chartByType"></canvas></div>
-  </div>
-  <div class="card">
-    <h2>Time to Customer Callback</h2>
-    <div class="chart-wrap"><canvas id="chartTiming"></canvas></div>
-  </div>
-</div>
-
-<!-- Chart Row 2: Weekly Trend -->
+<!-- Customer Journey Flow -->
 <div class="card">
-  <h2>Weekly Trend: Expert Missed Calls & Customer Callback Rate</h2>
-  <div class="chart-wrap" style="height: 320px;"><canvas id="chartWeekly"></canvas></div>
-</div>
+  <h2>What Happens After a Customer Misses an FS Appointment Call?</h2>
+  <div class="flow-diagram">
+    <div class="flow-node amber"><div class="fn-val">943</div><div class="fn-lbl">Customers missed<br>FS appt call</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node red"><div class="fn-val">8</div><div class="fn-lbl">Customer<br>called back (0.8%)</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green"><div class="fn-val">599</div><div class="fn-lbl">Later FS call<br>handled (63.5%)</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node purple"><div class="fn-val">336</div><div class="fn-lbl">No reconnection<br>yet (35.6%)</div></div>
+  </div>
 
-<!-- Breakdown Tables -->
-<div class="chart-row">
-  <div class="card">
-    <h3>By Missed Call Type</h3>
-    <table>
-      <tr><th>Type</th><th class="num">Missed</th><th class="num">Callback</th><th class="num">Rate</th></tr>
-      <tr><td>Outbound Voice</td><td class="num">19,350</td><td class="num">575</td><td class="num highlight">3.0%</td></tr>
-      <tr><td>Voice Callback</td><td class="num">14,992</td><td class="num">677</td><td class="num highlight">4.5%</td></tr>
-      <tr><td>Voice Callback Scheduled</td><td class="num">1,698</td><td class="num">36</td><td class="num highlight">2.1%</td></tr>
-      <tr style="font-weight:600; border-top: 2px solid var(--border);"><td>Total</td><td class="num">36,040</td><td class="num">1,288</td><td class="num highlight">3.6%</td></tr>
-    </table>
-  </div>
-  <div class="card">
-    <h3>Time to Callback (among those who called)</h3>
-    <table>
-      <tr><th>Window</th><th class="num">Count</th><th class="num">% of Callbacks</th></tr>
-      <tr><td>0–30 minutes</td><td class="num">1,091</td><td class="num highlight">84.7%</td></tr>
-      <tr><td>30–60 minutes</td><td class="num">57</td><td class="num">4.4%</td></tr>
-      <tr><td>1–4 hours</td><td class="num">63</td><td class="num">4.9%</td></tr>
-      <tr><td>4–24 hours</td><td class="num">69</td><td class="num">5.4%</td></tr>
-      <tr><td>1+ days</td><td class="num">8</td><td class="num">0.6%</td></tr>
-    </table>
-  </div>
-</div>
-
-<!-- Engagement-level view -->
-<div class="card">
-  <h3>Engagement-Level View</h3>
-  <div class="insight">
-    At the <strong>engagement level</strong>, 26,682 unique engagements had at least one expert outbound call that the customer missed.
-    Of those, 3,090 engagements (11.6%) had <em>any</em> inbound voice call from the customer at any point — 
-    but only 1,288 of the original missed calls (3.6%) had a direct follow-up inbound call after the miss.
-  </div>
-  <table>
-    <tr><th>Metric</th><th class="num">Value</th></tr>
-    <tr><td>Engagements with expert outbound missed call</td><td class="num">26,682</td></tr>
-    <tr><td>Engagements where customer ever placed an inbound call</td><td class="num">3,090</td></tr>
-    <tr><td>Engagement-level inbound rate</td><td class="num highlight">11.6%</td></tr>
+  <table style="margin-top: 16px;">
+    <tr><th>Outcome Path</th><th class="num">Customers</th><th class="num">% of Total</th><th class="num">FS Completed</th><th class="num">Any Product Completed</th></tr>
+    <tr><td>Customer Called Back</td><td class="num">8</td><td class="num h-red">0.8%</td><td class="num">0</td><td class="num">0</td></tr>
+    <tr><td>Later FS Call Handled (no callback)</td><td class="num">599</td><td class="num h-green">63.5%</td><td class="num">1</td><td class="num">3 (0.5%)</td></tr>
+    <tr><td>No Reconnection Yet</td><td class="num">336</td><td class="num h-amber">35.6%</td><td class="num">0</td><td class="num">1 (0.3%)</td></tr>
   </table>
+
+  <div class="insight">
+    <strong>Note on completion rates:</strong> Product completion rates appear very low (~0.4%) because the majority of missed calls occurred in Feb–Mar 2026. 
+    These FS engagements are still in progress — the expert does the tax work and the customer reviews before filing. 
+    With filing deadline in April, completion data will mature over the next 2–4 weeks.
+  </div>
+</div>
+
+<!-- Expert Retry Section -->
+<div class="chart-row">
+  <div class="card">
+    <h2>Expert Retry After Customer Miss</h2>
+    <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">Of 1,050 missed calls, 116 (11%) had the expert retry on the same engagement. When they retry quickly, connection rates are very high.</p>
+    <div class="chart-wrap"><canvas id="chartExpertRetry"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>Expert Retry Timing & Success</h2>
+    <table>
+      <tr><th>Time to Retry</th><th class="num">Retries</th><th class="num">Connected</th><th class="num">Rate</th></tr>
+      <tr><td>0–15 min</td><td class="num">16</td><td class="num">16</td><td class="num h-green">100%</td></tr>
+      <tr><td>15–30 min</td><td class="num">18</td><td class="num">18</td><td class="num h-green">100%</td></tr>
+      <tr><td>30–60 min</td><td class="num">8</td><td class="num">7</td><td class="num h-green">87.5%</td></tr>
+      <tr><td>1–4 hrs</td><td class="num">39</td><td class="num">26</td><td class="num h-amber">66.7%</td></tr>
+      <tr><td>4–24 hrs</td><td class="num">17</td><td class="num">10</td><td class="num h-amber">58.8%</td></tr>
+      <tr><td>1–3 days</td><td class="num">11</td><td class="num">8</td><td class="num h-amber">72.7%</td></tr>
+      <tr><td>3+ days</td><td class="num">7</td><td class="num">2</td><td class="num h-red">28.6%</td></tr>
+      <tr style="font-weight:600;"><td>Total</td><td class="num">116</td><td class="num">87</td><td class="num h-green">75.0%</td></tr>
+    </table>
+    <div class="insight" style="margin-top: 12px;">
+      <strong>Key finding:</strong> When experts retry within 30 minutes, they connect <strong>100% of the time</strong>. After 4+ hours, connection drops to ~50–60%.
+    </div>
+  </div>
+</div>
+
+<!-- Customer Callback Detail (small, since n=9) -->
+<div class="card">
+  <h2>Customer Callback Detail (n = 9)</h2>
+  <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">The rare customers who call back — when do they do it?</p>
+  <table>
+    <tr><th>Time to Callback</th><th class="num">Count</th><th class="num">Connected</th></tr>
+    <tr><td>0–30 min</td><td class="num">2</td><td class="num h-green">2</td></tr>
+    <tr><td>30–60 min</td><td class="num">2</td><td class="num h-green">2</td></tr>
+    <tr><td>1–4 hrs</td><td class="num">1</td><td class="num h-green">1</td></tr>
+    <tr><td>4–24 hrs</td><td class="num">1</td><td class="num h-green">1</td></tr>
+    <tr><td>1+ days</td><td class="num">3</td><td class="num h-green">3</td></tr>
+    <tr style="font-weight:600;"><td>Total</td><td class="num">9</td><td class="num h-green">9 (100%)</td></tr>
+  </table>
+  <div class="insight">All 9 customers who called back successfully connected with an expert — but this is fewer than 1 in 100 missed calls.</div>
+</div>
+
+<!-- Weekly Trend -->
+<div class="card">
+  <h2>Weekly Volume: FS Appointment Missed Calls</h2>
+  <div class="chart-wrap" style="height: 300px;"><canvas id="chartWeekly"></canvas></div>
 </div>
 
 <!-- Key Takeaways -->
 <div class="card">
   <h2>Key Takeaways</h2>
-  <div class="insight" style="border-left-color: var(--amber);">
-    <strong>1. Very low callback rate (~3.6%).</strong> When an FS expert calls a customer during an appointment and the customer doesn't answer, 
-    fewer than 4 in 100 customers call back. The vast majority of re-engagement happens through expert/system-initiated rescheduling, not customer action.
+  <div class="insight" style="border-left-color: var(--red);">
+    <strong>1. Customers almost never call back (~0.9%).</strong> When an expert calls during an FS appointment and the customer doesn't answer, 
+    fewer than 1 in 100 will initiate a return call. This is even lower than the all-CG rate (3.6%) because FS customers expect the expert to manage the process.
   </div>
   <div class="insight" style="border-left-color: var(--green);">
-    <strong>2. When they do call back, it's immediate.</strong> 85% of callbacks happen within 30 minutes of the missed call, 
-    suggesting the customer saw a missed call notification and responded right away. Very few call back after more than a few hours.
+    <strong>2. The system works — 64% eventually reconnect.</strong> Even though customers rarely call back, 
+    63.5% of affected customers eventually have a later FS call handled through expert/system-initiated re-engagement. The expert or scheduling system drives reconnection, not the customer.
   </div>
   <div class="insight" style="border-left-color: var(--cyan);">
-    <strong>3. Voice Callback has the highest callback rate (4.5%).</strong> When the system-initiated callback goes unanswered, 
-    customers are slightly more likely to call back than when an expert places a direct outbound call (3.0%).
+    <strong>3. Expert retries within 30 min connect 100% of the time.</strong> Of the 116 expert retries on the same engagement, those within 30 minutes had a perfect connection rate. 
+    Beyond 4 hours, the success rate drops to ~50–60%. Faster retries = better outcomes.
   </div>
-  <div class="insight" style="border-left-color: var(--red);">
-    <strong>4. Rate is stable across the season (3–4%).</strong> Despite volume ramping 30x from early January to March, 
-    the callback rate barely moves — this is a consistent behavioral pattern, not a seasonal anomaly.
+  <div class="insight" style="border-left-color: var(--amber);">
+    <strong>4. ~36% of customers have no reconnection yet.</strong> 336 customers (35.6%) who missed the call have not yet reconnected via any FS channel. 
+    Many are recent (Feb–Mar), so some will still reconnect. But this cohort represents potential at-risk engagements worth monitoring.
+  </div>
+  <div class="insight" style="border-left-color: var(--purple);">
+    <strong>5. Product completion is too early to measure.</strong> With most missed calls in Feb–Mar 2026, FS returns are still being prepared by experts. 
+    Completion rates will mature as the April filing deadline approaches. Only 4 of 943 customers have completed any product so far.
   </div>
 </div>
 
@@ -200,125 +234,81 @@
   <summary>Methodology & Data Source</summary>
   <div class="method-content" style="margin-top: 12px;">
     <p><strong>Source table:</strong> <code>ent_care_dwh.rpt_cct_interactions</code> (CCT — Contact Trace Records)</p>
-    <p><strong>Period:</strong> TY25, Jan 2026 – Mar 2026 (<code>leg_start_yearmonth >= 202601</code>)</p>
-    <p><strong>Business unit:</strong> <code>bu = 'cg'</code> (Consumer Group / TurboTax)</p>
+    <p><strong>Period:</strong> TYTD, Nov 2025 – Mar 2026 (<code>leg_start_yearmonth >= 202511</code>)</p>
+    <p><strong>Scope:</strong> <code>bu = 'cg'</code>, <code>interaction_skill_function = 'FS'</code>, <code>appointment_id IS NOT NULL</code></p>
     <p style="margin-top: 8px;"><strong>Expert missed call definition:</strong><br>
-      Calls where the expert/system reached out and the customer did not answer:<br>
-      <code>initiated_type IN ('OUTBOUND VOICE', 'VOICE CALLBACK', 'VOICE CALLBACK SCHEDULED')</code><br>
+      FS appointment calls where the customer did not answer:<br>
+      <code>interaction_skill_function = 'FS'</code><br>
+      <code>AND appointment_id IS NOT NULL</code><br>
       <code>AND customer_handle_flg = 0</code><br>
-      <code>AND engagement_id IS NOT NULL</code>
+      <code>AND initiated_type NOT IN ('INBOUND VOICE')</code> — excludes customer-initiated calls<br>
+      Primary type: <code>VOICE CALLBACK SCHEDULED</code> (96% of FS appt missed calls)
     </p>
-    <p style="margin-top: 8px;"><strong>Customer callback definition:</strong><br>
-      Any subsequent inbound voice call on the same engagement:<br>
-      <code>initiated_type = 'INBOUND VOICE'</code><br>
-      <code>AND leg_direction = 'INBOUND'</code><br>
-      <code>AND contact_start_ts > missed_call_ts</code><br>
-      <code>AND engagement_id = same engagement</code>
-    </p>
+    <p style="margin-top: 8px;"><strong>Customer callback:</strong> <code>initiated_type = 'INBOUND VOICE'</code> on same <code>engagement_id</code> after the miss</p>
+    <p style="margin-top: 8px;"><strong>Expert retry:</strong> Any subsequent expert-initiated call on same engagement (excluding <code>INBOUND VOICE</code>)</p>
+    <p style="margin-top: 8px;"><strong>Later FS call handled:</strong> Any <code>customer_handle_flg = 1</code> call with <code>interaction_skill_function = 'FS'</code> for same <code>auth_id</code> after the miss</p>
+    <p style="margin-top: 8px;"><strong>Product completion:</strong> <code>tax_rpt.product_analytics_master</code> with <code>tax_year = 2025</code>, joined on <code>auth_id</code>. 
+      Note: 86% of affected customers have no PAM record yet — FS returns are prepared by experts before the customer reviews and files.</p>
     <p style="margin-top: 8px; color: var(--amber);">
-      <strong>Note:</strong> An earlier version of this analysis used <code>care_rpt.rpt_appointment_funnel</code> 
-      which tracks appointment rebookings (33% rate) — not actual call-level initiation direction. The CCT table 
-      is the correct source for identifying who initiated each call.
+      <strong>Previous version note:</strong> An earlier version of this report included ALL CG outbound calls (DIY support, TTL, etc.), not just FS appointment calls. 
+      This version correctly filters to <code>interaction_skill_function = 'FS'</code> + <code>appointment_id IS NOT NULL</code>, 
+      reducing the population from 36,040 to 1,050 and the callback rate from 3.6% to 0.9%.
     </p>
   </div>
 </details>
 
 <div class="footer">
-  Generated Mar 30, 2026 · Data through Mar 29, 2026 · Source: ent_care_dwh.rpt_cct_interactions
+  Generated Mar 30, 2026 · TYTD data (Nov 2025 – Mar 29, 2026) · Source: ent_care_dwh.rpt_cct_interactions + tax_rpt.product_analytics_master
 </div>
 </div>
 
 <script>
 (function () {
-  var baseOpts = {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: true, labels: { color: '#8b8fa3', font: { size: 11 } } } },
-    scales: {
-      x: { ticks: { color: '#8b8fa3', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-      y: { ticks: { color: '#8b8fa3', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
-    }
-  };
+  var baseFont = { color: '#8b8fa3', font: { size: 10 } };
+  var gridStyle = { color: 'rgba(255,255,255,0.06)' };
 
-  // Chart 1: Callback Rate by Type (horizontal bar)
-  new Chart(document.getElementById('chartByType'), {
+  // Expert Retry: stacked bar (connected vs missed)
+  new Chart(document.getElementById('chartExpertRetry'), {
     type: 'bar',
     data: {
-      labels: ['Outbound Voice', 'Voice Callback', 'Voice CB Scheduled'],
+      labels: ['0-15m', '15-30m', '30-60m', '1-4h', '4-24h', '1-3d', '3+d'],
       datasets: [
-        { label: 'Missed Calls', data: [19350, 14992, 1698], backgroundColor: 'rgba(251, 191, 36, 0.7)', borderRadius: 4 },
-        { label: 'Customer Called Back', data: [575, 677, 36], backgroundColor: 'rgba(165, 180, 252, 0.9)', borderRadius: 4 }
+        { label: 'Connected', data: [16, 18, 7, 26, 10, 8, 2], backgroundColor: 'rgba(52, 211, 153, 0.8)', borderRadius: 4 },
+        { label: 'Missed Again', data: [0, 0, 0, 7, 3, 2, 2], backgroundColor: 'rgba(248, 113, 113, 0.8)', borderRadius: 4 },
+        { label: 'Other', data: [0, 0, 1, 6, 4, 1, 3], backgroundColor: 'rgba(139, 143, 163, 0.4)', borderRadius: 4 }
       ]
     },
     options: {
-      ...baseOpts, indexAxis: 'y',
-      scales: {
-        x: { ...baseOpts.scales.x, ticks: { ...baseOpts.scales.x.ticks, callback: function(v) { return v >= 1000 ? (v/1000).toFixed(0) + 'K' : v; } } },
-        y: { ...baseOpts.scales.y }
-      },
-      plugins: { ...baseOpts.plugins, tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw.toLocaleString(); } } } }
-    }
-  });
-
-  // Chart 2: Timing donut
-  new Chart(document.getElementById('chartTiming'), {
-    type: 'doughnut',
-    data: {
-      labels: ['0–30 min', '30–60 min', '1–4 hrs', '4–24 hrs', '1+ days'],
-      datasets: [{
-        data: [1091, 57, 63, 69, 8],
-        backgroundColor: ['#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#3730a3'],
-        borderWidth: 0
-      }]
-    },
-    options: {
       responsive: true, maintainAspectRatio: false,
-      cutout: '55%',
-      plugins: {
-        legend: { position: 'right', labels: { color: '#8b8fa3', font: { size: 11 }, padding: 10 } },
-        tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.raw.toLocaleString() + ' (' + [84.7,4.4,4.9,5.4,0.6][ctx.dataIndex] + '%)'; } } }
+      plugins: { legend: { labels: { color: '#8b8fa3', font: { size: 11 } } } },
+      scales: {
+        x: { stacked: true, ticks: baseFont, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { stacked: true, ticks: baseFont, grid: gridStyle, title: { display: true, text: 'Expert Retries', color: '#8b8fa3', font: { size: 11 } } }
       }
     }
   });
 
-  // Chart 3: Weekly trend (dual axis)
-  var weekLabels = ['Jan 5', 'Jan 12', 'Jan 19', 'Jan 26', 'Feb 2', 'Feb 9', 'Feb 16', 'Feb 23', 'Mar 2', 'Mar 9', 'Mar 16', 'Mar 23'];
-  var missedVol =  [230, 278, 259, 407, 477, 793, 1345, 5459, 6450, 6814, 6866, 6619];
-  var cbRate =     [3.9, 2.5, 1.9, 4.7, 3.4, 3.8, 3.5, 4.0, 3.7, 4.0, 3.1, 3.2];
+  // Weekly trend
+  var weeks = ['Nov 3','Nov 10','Nov 17','Nov 24','Dec 1','Dec 8','Dec 15','Dec 22','Dec 29','Jan 5','Jan 12','Jan 19','Jan 26','Feb 2','Feb 9','Feb 16','Feb 23','Mar 2','Mar 9','Mar 16','Mar 23'];
+  var missed = [18,12,14,12,5,7,8,9,11,14,14,22,27,40,55,90,141,131,152,130,138];
 
   new Chart(document.getElementById('chartWeekly'), {
     type: 'bar',
     data: {
-      labels: weekLabels,
-      datasets: [
-        {
-          type: 'bar', label: 'Expert Missed Calls', data: missedVol,
-          backgroundColor: 'rgba(251, 191, 36, 0.5)', borderRadius: 4, yAxisID: 'y', order: 2
-        },
-        {
-          type: 'line', label: 'Callback Rate %', data: cbRate,
-          borderColor: '#a5b4fc', backgroundColor: 'rgba(165, 180, 252, 0.15)',
-          pointBackgroundColor: '#a5b4fc', pointRadius: 4, tension: 0.3, fill: true,
-          yAxisID: 'y1', order: 1
-        }
-      ]
+      labels: weeks,
+      datasets: [{
+        label: 'FS Appt Missed Calls',
+        data: missed,
+        backgroundColor: 'rgba(251, 191, 36, 0.6)',
+        borderRadius: 3
+      }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#8b8fa3', font: { size: 11 } } },
-        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + (ctx.datasetIndex === 0 ? ctx.raw.toLocaleString() : ctx.raw + '%'); } } }
-      },
+      plugins: { legend: { labels: { color: '#8b8fa3', font: { size: 11 } } } },
       scales: {
-        x: { ticks: { color: '#8b8fa3', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-        y: {
-          position: 'left', ticks: { color: '#fbbf24', font: { size: 10 }, callback: function(v) { return v >= 1000 ? (v/1000).toFixed(0) + 'K' : v; } },
-          grid: { color: 'rgba(255,255,255,0.06)' }, title: { display: true, text: 'Missed Calls', color: '#fbbf24', font: { size: 11 } }
-        },
-        y1: {
-          position: 'right', min: 0, max: 8,
-          ticks: { color: '#a5b4fc', font: { size: 10 }, callback: function(v) { return v + '%'; } },
-          grid: { drawOnChartArea: false }, title: { display: true, text: 'Callback Rate', color: '#a5b4fc', font: { size: 11 } }
-        }
+        x: { ticks: { color: '#8b8fa3', font: { size: 9 }, maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: baseFont, grid: gridStyle, title: { display: true, text: 'Missed Calls', color: '#fbbf24', font: { size: 11 } } }
       }
     }
   });
