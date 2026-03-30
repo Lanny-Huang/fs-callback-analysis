@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FS Appointment: Missed Call → Customer Callback Analysis | TY25</title>
+<title>FS Appointment Call Analysis | TY25</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root {
@@ -22,11 +22,11 @@
   .tag { display: inline-block; background: var(--surface2); color: var(--accent); font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 4px; }
 
   .headline { background: linear-gradient(135deg, #1e2235 0%, #1a1d27 100%); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; margin-bottom: 28px; }
-  .headline .big-num { font-size: 56px; font-weight: 800; color: var(--red); line-height: 1; }
+  .headline .big-num { font-size: 56px; font-weight: 800; line-height: 1; }
   .headline .big-label { font-size: 16px; color: var(--muted); margin-top: 4px; }
-  .headline .context { font-size: 14px; color: var(--text); margin-top: 12px; max-width: 700px; }
+  .headline .context { font-size: 14px; color: var(--text); margin-top: 12px; max-width: 720px; }
 
-  .kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; margin-bottom: 28px; }
   .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; text-align: center; }
   .kpi .val { font-size: 26px; font-weight: 700; }
   .kpi .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
@@ -39,7 +39,6 @@
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 20px; }
   .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
-  .card h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--accent); }
   .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
   .chart-wrap { position: relative; height: 280px; }
   @media (max-width: 700px) { .chart-row { grid-template-columns: 1fr; } }
@@ -49,23 +48,25 @@
   td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
   tr:last-child td { border-bottom: none; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
-  .highlight { color: var(--accent); font-weight: 600; }
   .h-green { color: var(--green); font-weight: 600; }
   .h-amber { color: var(--amber); font-weight: 600; }
   .h-red { color: var(--red); font-weight: 600; }
+  .h-cyan { color: var(--cyan); font-weight: 600; }
 
   .insight { background: rgba(165, 180, 252, 0.08); border-left: 3px solid var(--accent); padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14px; }
 
-  .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0; margin: 20px 0; flex-wrap: wrap; }
-  .flow-node { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; text-align: center; min-width: 120px; }
+  .flow-diagram { display: flex; align-items: stretch; justify-content: center; gap: 0; margin: 20px 0; flex-wrap: wrap; }
+  .flow-node { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; text-align: center; min-width: 115px; display: flex; flex-direction: column; justify-content: center; }
   .flow-node .fn-val { font-size: 22px; font-weight: 700; }
+  .flow-node .fn-pct { font-size: 12px; font-weight: 600; margin-top: 1px; }
   .flow-node .fn-lbl { font-size: 11px; color: var(--muted); }
-  .flow-arrow { color: var(--muted); font-size: 22px; padding: 0 6px; }
+  .flow-arrow { color: var(--muted); font-size: 22px; padding: 0 6px; display: flex; align-items: center; }
   .flow-node.green { border-color: var(--green); } .flow-node.green .fn-val { color: var(--green); }
   .flow-node.amber { border-color: var(--amber); } .flow-node.amber .fn-val { color: var(--amber); }
   .flow-node.red { border-color: var(--red); } .flow-node.red .fn-val { color: var(--red); }
   .flow-node.accent { border-color: var(--accent); } .flow-node.accent .fn-val { color: var(--accent); }
   .flow-node.purple { border-color: var(--purple); } .flow-node.purple .fn-val { color: var(--purple); }
+  .flow-node.cyan { border-color: var(--cyan); } .flow-node.cyan .fn-val { color: var(--cyan); }
 
   details { margin-top: 20px; }
   summary { cursor: pointer; color: var(--muted); font-size: 13px; }
@@ -79,8 +80,8 @@
 <div class="container">
 
 <header>
-  <h1>FS Appointment Missed Call Analysis</h1>
-  <div class="subtitle">When an expert calls a customer during a Full Service appointment and the customer doesn't answer: how often does the customer call back? How quickly does the expert retry? What happens to these customers?</div>
+  <h1>FS Appointment Call Analysis</h1>
+  <div class="subtitle">Expert outbound calls during Full Service appointments: answer rates, customer callback behavior, expert retry patterns, and downstream outcomes for customers who miss the call.</div>
   <div style="margin-top: 8px;">
     <span class="tag">Full Service</span>
     <span class="tag">Appointments</span>
@@ -91,27 +92,31 @@
 
 <!-- Headline -->
 <div class="headline">
-  <div class="big-num">~0.9%</div>
-  <div class="big-label">of customers call the expert back after missing an FS appointment call</div>
+  <div class="big-num" style="color: var(--accent);">5,928</div>
+  <div class="big-label">expert outbound calls made during FS appointments this tax year</div>
   <div class="context">
-    Out of 1,050 FS appointment calls where the expert called and the customer didn't answer,
-    only 9 resulted in the customer placing an inbound call on the same engagement.
-    However, <strong>64% of these customers eventually talk to an expert</strong> through a later FS call — 
-    the system handles re-engagement, not the customer.
+    Experts placed 5,928 outbound calls to customers during Full Service appointments (TYTD). 
+    <strong>82% were answered</strong> (4,878 calls). Of the 1,050 missed calls, 
+    customers almost never call back (<strong>0.9%</strong>) — but <strong>64% eventually reconnect</strong> 
+    through expert/system-initiated re-engagement.
   </div>
 </div>
 
 <!-- KPI strip -->
 <div class="kpi-strip">
+  <div class="kpi accent">
+    <div class="val">5,928</div>
+    <div class="lbl">Expert Outbound<br>FS Appt Calls</div>
+  </div>
+  <div class="kpi green">
+    <div class="val">82.3%</div>
+    <div class="lbl">Customer<br>Answer Rate</div>
+  </div>
   <div class="kpi amber">
     <div class="val">1,050</div>
-    <div class="lbl">FS Appt Calls<br>Customer Missed</div>
+    <div class="lbl">Customer<br>Missed Call</div>
   </div>
   <div class="kpi red">
-    <div class="val">9</div>
-    <div class="lbl">Customer<br>Called Back</div>
-  </div>
-  <div class="kpi accent">
     <div class="val">0.9%</div>
     <div class="lbl">Customer<br>Callback Rate</div>
   </div>
@@ -119,27 +124,47 @@
     <div class="val">11%</div>
     <div class="lbl">Expert Retried<br>(same engagement)</div>
   </div>
-  <div class="kpi green">
+  <div class="kpi purple">
     <div class="val">64%</div>
     <div class="lbl">Later FS Call<br>Handled</div>
   </div>
-  <div class="kpi purple">
-    <div class="val">943</div>
-    <div class="lbl">Unique Customers<br>Affected</div>
+</div>
+
+<!-- Full Funnel Flow -->
+<div class="card">
+  <h2>FS Appointment Call Funnel</h2>
+  <div class="flow-diagram">
+    <div class="flow-node accent"><div class="fn-val">5,928</div><div class="fn-lbl">Expert outbound<br>FS appt calls</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green"><div class="fn-val">4,878</div><div class="fn-pct" style="color:var(--green);">82.3%</div><div class="fn-lbl">Customer<br>answered</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node amber"><div class="fn-val">1,050</div><div class="fn-pct" style="color:var(--amber);">17.7%</div><div class="fn-lbl">Customer<br>missed</div></div>
+  </div>
+
+  <table style="margin-top: 16px;">
+    <tr><th>Call Outcome</th><th class="num">Calls</th><th class="num">Unique Customers</th><th class="num">% of Calls</th></tr>
+    <tr><td>Customer Answered</td><td class="num">4,878</td><td class="num">2,851</td><td class="num h-green">82.3%</td></tr>
+    <tr><td>Customer Missed</td><td class="num">1,050</td><td class="num">943</td><td class="num h-amber">17.7%</td></tr>
+    <tr style="color: var(--muted);"><td>Unknown/Null</td><td class="num">681</td><td class="num">638</td><td class="num">—</td></tr>
+  </table>
+  <div class="insight">
+    <strong>82% answer rate is solid</strong>, but 1 in 6 FS appointment calls goes unanswered. 
+    681 calls have a null <code>customer_handle_flg</code> (excluded from rate calculations).
   </div>
 </div>
 
-<!-- Customer Journey Flow -->
+<!-- What Happens After Miss -->
 <div class="card">
-  <h2>What Happens After a Customer Misses an FS Appointment Call?</h2>
+  <h2>What Happens After a Customer Misses the Call?</h2>
+  <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">Of 943 unique customers who missed at least one FS appointment call:</p>
   <div class="flow-diagram">
     <div class="flow-node amber"><div class="fn-val">943</div><div class="fn-lbl">Customers missed<br>FS appt call</div></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-node red"><div class="fn-val">8</div><div class="fn-lbl">Customer<br>called back (0.8%)</div></div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-node green"><div class="fn-val">599</div><div class="fn-lbl">Later FS call<br>handled (63.5%)</div></div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-node purple"><div class="fn-val">336</div><div class="fn-lbl">No reconnection<br>yet (35.6%)</div></div>
+    <div class="flow-node red"><div class="fn-val">8</div><div class="fn-pct" style="color:var(--red);">0.8%</div><div class="fn-lbl">Customer<br>called back</div></div>
+    <div class="flow-arrow" style="font-size:14px; color: var(--muted);">|</div>
+    <div class="flow-node green"><div class="fn-val">599</div><div class="fn-pct" style="color:var(--green);">63.5%</div><div class="fn-lbl">Later FS call<br>handled</div></div>
+    <div class="flow-arrow" style="font-size:14px; color: var(--muted);">|</div>
+    <div class="flow-node purple"><div class="fn-val">336</div><div class="fn-pct" style="color:var(--purple);">35.6%</div><div class="fn-lbl">No reconnection<br>yet</div></div>
   </div>
 
   <table style="margin-top: 16px;">
@@ -151,8 +176,8 @@
 
   <div class="insight">
     <strong>Note on completion rates:</strong> Product completion rates appear very low (~0.4%) because the majority of missed calls occurred in Feb–Mar 2026. 
-    These FS engagements are still in progress — the expert does the tax work and the customer reviews before filing. 
-    With filing deadline in April, completion data will mature over the next 2–4 weeks.
+    FS engagements are still in progress — the expert prepares the return, and the customer reviews before filing. 
+    86% of affected customers have no PAM record yet. Completion data will mature as the April deadline approaches.
   </div>
 </div>
 
@@ -164,7 +189,7 @@
     <div class="chart-wrap"><canvas id="chartExpertRetry"></canvas></div>
   </div>
   <div class="card">
-    <h2>Expert Retry Timing & Success</h2>
+    <h2>Expert Retry Timing &amp; Success</h2>
     <table>
       <tr><th>Time to Retry</th><th class="num">Retries</th><th class="num">Connected</th><th class="num">Rate</th></tr>
       <tr><td>0–15 min</td><td class="num">16</td><td class="num">16</td><td class="num h-green">100%</td></tr>
@@ -174,15 +199,15 @@
       <tr><td>4–24 hrs</td><td class="num">17</td><td class="num">10</td><td class="num h-amber">58.8%</td></tr>
       <tr><td>1–3 days</td><td class="num">11</td><td class="num">8</td><td class="num h-amber">72.7%</td></tr>
       <tr><td>3+ days</td><td class="num">7</td><td class="num">2</td><td class="num h-red">28.6%</td></tr>
-      <tr style="font-weight:600;"><td>Total</td><td class="num">116</td><td class="num">87</td><td class="num h-green">75.0%</td></tr>
+      <tr style="font-weight:600; border-top: 2px solid var(--border);"><td>Total</td><td class="num">116</td><td class="num">87</td><td class="num h-green">75.0%</td></tr>
     </table>
     <div class="insight" style="margin-top: 12px;">
-      <strong>Key finding:</strong> When experts retry within 30 minutes, they connect <strong>100% of the time</strong>. After 4+ hours, connection drops to ~50–60%.
+      <strong>Key finding:</strong> Retries within 30 minutes connect <strong>100% of the time</strong>. After 4+ hours, connection drops to ~50–60%.
     </div>
   </div>
 </div>
 
-<!-- Customer Callback Detail (small, since n=9) -->
+<!-- Customer Callback Detail -->
 <div class="card">
   <h2>Customer Callback Detail (n = 9)</h2>
   <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">The rare customers who call back — when do they do it?</p>
@@ -195,65 +220,64 @@
     <tr><td>1+ days</td><td class="num">3</td><td class="num h-green">3</td></tr>
     <tr style="font-weight:600;"><td>Total</td><td class="num">9</td><td class="num h-green">9 (100%)</td></tr>
   </table>
-  <div class="insight">All 9 customers who called back successfully connected with an expert — but this is fewer than 1 in 100 missed calls.</div>
+  <div class="insight">All 9 customers who called back successfully connected — but this is fewer than 1 in 100 missed calls.</div>
 </div>
 
 <!-- Weekly Trend -->
 <div class="card">
-  <h2>Weekly Volume: FS Appointment Missed Calls</h2>
-  <div class="chart-wrap" style="height: 300px;"><canvas id="chartWeekly"></canvas></div>
+  <h2>Weekly Volume: FS Appointment Outbound Calls</h2>
+  <div class="chart-wrap" style="height: 320px;"><canvas id="chartWeekly"></canvas></div>
 </div>
 
 <!-- Key Takeaways -->
 <div class="card">
   <h2>Key Takeaways</h2>
+  <div class="insight" style="border-left-color: var(--accent);">
+    <strong>1. Experts made 5,928 outbound FS appointment calls TYTD.</strong> The customer answer rate is 82.3% — 
+    1 in 6 calls goes unanswered. Volume scales dramatically in peak season (Feb–Mar), reaching 900+ calls/week.
+  </div>
   <div class="insight" style="border-left-color: var(--red);">
-    <strong>1. Customers almost never call back (~0.9%).</strong> When an expert calls during an FS appointment and the customer doesn't answer, 
-    fewer than 1 in 100 will initiate a return call. This is even lower than the all-CG rate (3.6%) because FS customers expect the expert to manage the process.
+    <strong>2. Customers almost never call back (~0.9%).</strong> Only 9 out of 1,050 missed FS appointment calls 
+    resulted in a customer callback. FS customers expect the expert to manage the process.
   </div>
   <div class="insight" style="border-left-color: var(--green);">
-    <strong>2. The system works — 64% eventually reconnect.</strong> Even though customers rarely call back, 
-    63.5% of affected customers eventually have a later FS call handled through expert/system-initiated re-engagement. The expert or scheduling system drives reconnection, not the customer.
+    <strong>3. The system works — 64% eventually reconnect.</strong> Even without customer callbacks, 
+    63.5% of affected customers eventually have a later FS call handled through expert/system re-engagement.
   </div>
   <div class="insight" style="border-left-color: var(--cyan);">
-    <strong>3. Expert retries within 30 min connect 100% of the time.</strong> Of the 116 expert retries on the same engagement, those within 30 minutes had a perfect connection rate. 
-    Beyond 4 hours, the success rate drops to ~50–60%. Faster retries = better outcomes.
+    <strong>4. Expert retries within 30 min connect 100% of the time.</strong> Of the 116 expert retries, those within 30 minutes had a perfect connection rate. 
+    Beyond 4 hours, success drops to ~50–60%. Faster retries = better outcomes.
   </div>
   <div class="insight" style="border-left-color: var(--amber);">
-    <strong>4. ~36% of customers have no reconnection yet.</strong> 336 customers (35.6%) who missed the call have not yet reconnected via any FS channel. 
-    Many are recent (Feb–Mar), so some will still reconnect. But this cohort represents potential at-risk engagements worth monitoring.
+    <strong>5. ~36% of missed-call customers have no reconnection yet.</strong> 336 customers haven't reconnected via any FS channel. 
+    Many are recent (Feb–Mar), but this cohort represents potential at-risk engagements.
   </div>
   <div class="insight" style="border-left-color: var(--purple);">
-    <strong>5. Product completion is too early to measure.</strong> With most missed calls in Feb–Mar 2026, FS returns are still being prepared by experts. 
-    Completion rates will mature as the April filing deadline approaches. Only 4 of 943 customers have completed any product so far.
+    <strong>6. Product completion is too early to measure.</strong> Only 4 of 943 affected customers have completed any product. 
+    86% have no PAM record yet — FS returns are still being prepared by experts. This will mature post-April deadline.
   </div>
 </div>
 
 <!-- Methodology -->
 <details class="card">
-  <summary>Methodology & Data Source</summary>
+  <summary>Methodology &amp; Data Source</summary>
   <div class="method-content" style="margin-top: 12px;">
     <p><strong>Source table:</strong> <code>ent_care_dwh.rpt_cct_interactions</code> (CCT — Contact Trace Records)</p>
     <p><strong>Period:</strong> TYTD, Nov 2025 – Mar 2026 (<code>leg_start_yearmonth >= 202511</code>)</p>
     <p><strong>Scope:</strong> <code>bu = 'cg'</code>, <code>interaction_skill_function = 'FS'</code>, <code>appointment_id IS NOT NULL</code></p>
-    <p style="margin-top: 8px;"><strong>Expert missed call definition:</strong><br>
-      FS appointment calls where the customer did not answer:<br>
+    <p style="margin-top: 8px;"><strong>Expert outbound call:</strong><br>
+      All FS appointment calls initiated by the expert/system:<br>
       <code>interaction_skill_function = 'FS'</code><br>
       <code>AND appointment_id IS NOT NULL</code><br>
-      <code>AND customer_handle_flg = 0</code><br>
-      <code>AND initiated_type NOT IN ('INBOUND VOICE')</code> — excludes customer-initiated calls<br>
-      Primary type: <code>VOICE CALLBACK SCHEDULED</code> (96% of FS appt missed calls)
+      <code>AND initiated_type NOT IN ('INBOUND VOICE')</code><br>
+      Total: 5,928 calls (excluding 681 with null <code>customer_handle_flg</code> from rate calculations)
     </p>
+    <p style="margin-top: 8px;"><strong>Customer missed:</strong> <code>customer_handle_flg = 0</code> — 1,050 calls (17.7%)</p>
     <p style="margin-top: 8px;"><strong>Customer callback:</strong> <code>initiated_type = 'INBOUND VOICE'</code> on same <code>engagement_id</code> after the miss</p>
     <p style="margin-top: 8px;"><strong>Expert retry:</strong> Any subsequent expert-initiated call on same engagement (excluding <code>INBOUND VOICE</code>)</p>
     <p style="margin-top: 8px;"><strong>Later FS call handled:</strong> Any <code>customer_handle_flg = 1</code> call with <code>interaction_skill_function = 'FS'</code> for same <code>auth_id</code> after the miss</p>
-    <p style="margin-top: 8px;"><strong>Product completion:</strong> <code>tax_rpt.product_analytics_master</code> with <code>tax_year = 2025</code>, joined on <code>auth_id</code>. 
-      Note: 86% of affected customers have no PAM record yet — FS returns are prepared by experts before the customer reviews and files.</p>
-    <p style="margin-top: 8px; color: var(--amber);">
-      <strong>Previous version note:</strong> An earlier version of this report included ALL CG outbound calls (DIY support, TTL, etc.), not just FS appointment calls. 
-      This version correctly filters to <code>interaction_skill_function = 'FS'</code> + <code>appointment_id IS NOT NULL</code>, 
-      reducing the population from 36,040 to 1,050 and the callback rate from 3.6% to 0.9%.
-    </p>
+    <p style="margin-top: 8px;"><strong>Product completion:</strong> <code>tax_rpt.product_analytics_master</code> (<code>tax_year = 2025</code>), joined on <code>auth_id</code>. 
+      86% of affected customers have no PAM record — FS returns are prepared by experts before the customer reviews and files.</p>
   </div>
 </details>
 
@@ -267,7 +291,7 @@
   var baseFont = { color: '#8b8fa3', font: { size: 10 } };
   var gridStyle = { color: 'rgba(255,255,255,0.06)' };
 
-  // Expert Retry: stacked bar (connected vs missed)
+  // Expert Retry: stacked bar
   new Chart(document.getElementById('chartExpertRetry'), {
     type: 'bar',
     data: {
@@ -288,27 +312,33 @@
     }
   });
 
-  // Weekly trend
+  // Weekly trend: answered vs missed (stacked)
   var weeks = ['Nov 3','Nov 10','Nov 17','Nov 24','Dec 1','Dec 8','Dec 15','Dec 22','Dec 29','Jan 5','Jan 12','Jan 19','Jan 26','Feb 2','Feb 9','Feb 16','Feb 23','Mar 2','Mar 9','Mar 16','Mar 23'];
-  var missed = [18,12,14,12,5,7,8,9,11,14,14,22,27,40,55,90,141,131,152,130,138];
+  var answered = [46,53,48,31,24,11,28,13,17,17,24,40,51,106,201,540,857,739,713,640,679];
+  var missed =   [18,12,14,12, 5, 7, 8, 9,11,14,14,22,27, 40, 55, 90,141,131,152,130,138];
+  var missRate = [];
+  for (var i = 0; i < weeks.length; i++) {
+    var total = answered[i] + missed[i];
+    missRate.push(total > 0 ? Math.round(missed[i] * 1000 / total) / 10 : 0);
+  }
 
   new Chart(document.getElementById('chartWeekly'), {
     type: 'bar',
     data: {
       labels: weeks,
-      datasets: [{
-        label: 'FS Appt Missed Calls',
-        data: missed,
-        backgroundColor: 'rgba(251, 191, 36, 0.6)',
-        borderRadius: 3
-      }]
+      datasets: [
+        { label: 'Answered', data: answered, backgroundColor: 'rgba(52, 211, 153, 0.6)', borderRadius: 2, order: 2, yAxisID: 'y' },
+        { label: 'Missed', data: missed, backgroundColor: 'rgba(251, 191, 36, 0.7)', borderRadius: 2, order: 2, yAxisID: 'y' },
+        { label: 'Miss Rate %', data: missRate, type: 'line', borderColor: 'rgba(248, 113, 113, 0.9)', backgroundColor: 'rgba(248, 113, 113, 0.1)', borderWidth: 2, pointRadius: 2, tension: 0.3, order: 1, yAxisID: 'y1' }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { labels: { color: '#8b8fa3', font: { size: 11 } } } },
       scales: {
-        x: { ticks: { color: '#8b8fa3', font: { size: 9 }, maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.04)' } },
-        y: { ticks: baseFont, grid: gridStyle, title: { display: true, text: 'Missed Calls', color: '#fbbf24', font: { size: 11 } } }
+        x: { stacked: true, ticks: { color: '#8b8fa3', font: { size: 9 }, maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { stacked: true, ticks: baseFont, grid: gridStyle, title: { display: true, text: 'Calls', color: '#8b8fa3', font: { size: 11 } } },
+        y1: { position: 'right', min: 0, max: 50, ticks: { color: '#f87171', font: { size: 10 }, callback: function(v) { return v + '%'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Miss Rate %', color: '#f87171', font: { size: 11 } } }
       }
     }
   });
