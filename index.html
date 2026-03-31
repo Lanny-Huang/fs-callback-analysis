@@ -96,10 +96,10 @@
   <div class="big-label">expert outbound calls made during FS appointments this tax year</div>
   <div class="context">
     Experts placed 5,928 outbound calls to customers during Full Service appointments (TYTD). 
-    <strong>82% were answered</strong> (4,878 calls). Of the 959 unique customers who missed calls, 
+    <strong>82% were answered</strong> (4,878 calls). Of the 959 unique customers who missed calls (handle_flg=0), 
     <strong>17.5% made an inbound call</strong> afterward — but <strong>71% went to non-FS queues</strong> 
-    (primarily DIY support), revealing a routing gap. <strong>65% eventually reconnect</strong> 
-    through expert/system-initiated re-engagement.
+    (primarily DIY support). Additionally, <strong>662 PSTN fallback engagements</strong> (video no-show → phone dial) 
+    had a NULL first-leg handle — 285 of these never connected, expanding the true "unreached" population.
   </div>
 </div>
 
@@ -146,11 +146,60 @@
     <tr><th>Call Outcome</th><th class="num">Calls</th><th class="num">Unique Customers</th><th class="num">% of Calls</th></tr>
     <tr><td>Customer Answered</td><td class="num">4,878</td><td class="num">2,851</td><td class="num h-green">82.3%</td></tr>
     <tr><td>Customer Missed</td><td class="num">1,050</td><td class="num">943</td><td class="num h-amber">17.7%</td></tr>
-    <tr style="color: var(--muted);"><td>Unknown/Null</td><td class="num">681</td><td class="num">638</td><td class="num">—</td></tr>
+    <tr style="color: var(--cyan);"><td>Video Invite / No-Show (NULL handle) <span style="font-size:11px;">⟵ PSTN Fallback</span></td><td class="num">681</td><td class="num">638</td><td class="num">—</td></tr>
   </table>
   <div class="insight">
-    <strong>82% answer rate is solid</strong>, but 1 in 6 FS appointment calls goes unanswered. 
-    681 calls have a null <code>customer_handle_flg</code> (excluded from rate calculations).
+    <strong>82% answer rate is solid</strong>, but 1 in 6 calls goes unanswered. 
+    The 681 NULL-handle calls are primarily <strong>PSTN fallback video invites</strong> — the initial video meeting leg 
+    before an expert dials via phone. See the PSTN Fallback section below for how many ultimately connect.
+  </div>
+</div>
+
+<!-- PSTN Fallback Analysis -->
+<div class="card">
+  <h2>PSTN Fallback: Video No-Show → Phone Dial</h2>
+  <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">FS appointments start as a video meeting. If the customer doesn't join, the expert presses a button to call them via phone (PSTN fallback). These fallback dials appear as <code>VOICE CALLBACK SCHEDULED</code> with <code>customer_handle_flg = NULL</code> on the initial video leg, followed by a phone leg.</p>
+  
+  <div class="flow-diagram">
+    <div class="flow-node accent"><div class="fn-val">4,178</div><div class="fn-lbl">Total FS appt<br>engagements</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node cyan"><div class="fn-val">1,790</div><div class="fn-pct" style="color:var(--cyan);">42.8%</div><div class="fn-lbl">Video + PSTN<br>Callback</div></div>
+    <div class="flow-arrow" style="font-size:14px; color: var(--muted);">|</div>
+    <div class="flow-node" style="border-color: var(--amber);"><div class="fn-val" style="color:var(--amber);">2,229</div><div class="fn-pct" style="color:var(--amber);">53.3%</div><div class="fn-lbl">Direct Phone<br>Only (no video)</div></div>
+    <div class="flow-arrow" style="font-size:14px; color: var(--muted);">|</div>
+    <div class="flow-node purple"><div class="fn-val">159</div><div class="fn-pct" style="color:var(--purple);">3.8%</div><div class="fn-lbl">Phone Callback<br>Only</div></div>
+  </div>
+
+  <table style="margin-top: 16px;">
+    <tr><th>Engagement Type</th><th class="num">Engagements</th><th class="num">Unique Auths</th><th class="num">Ever Connected</th><th class="num">Never Connected</th><th class="num">Connect Rate</th></tr>
+    <tr><td>Video + PSTN Callback <span style="color:var(--cyan); font-size:11px;">(video first, then phone dial)</span></td><td class="num">1,790</td><td class="num">1,784</td><td class="num h-green">1,790</td><td class="num">0</td><td class="num h-green">100%</td></tr>
+    <tr><td>Direct Phone Only <span style="color:var(--muted); font-size:11px;">(no video leg)</span></td><td class="num">2,229</td><td class="num">1,963</td><td class="num">1,213</td><td class="num h-red">1,016</td><td class="num h-amber">54.4%</td></tr>
+    <tr><td>Phone Callback Only</td><td class="num">159</td><td class="num">147</td><td class="num">87</td><td class="num">72</td><td class="num h-amber">54.7%</td></tr>
+  </table>
+
+  <h3 style="font-size: 14px; margin-top: 20px; margin-bottom: 12px;">What happens on the first leg of each engagement?</h3>
+  <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">The first leg's <code>customer_handle_flg</code> tells us whether the initial contact attempt was answered, missed, or a video invite (null):</p>
+  <table>
+    <tr><th>First Leg Outcome</th><th>Type</th><th class="num">Engagements</th><th class="num">Eventually Connected</th><th class="num">Never Connected</th></tr>
+    <tr><td><span class="h-green">Connected (handle=1)</span></td><td>VCS</td><td class="num">1,792</td><td class="num h-green">1,792 (100%)</td><td class="num">0</td></tr>
+    <tr><td><span class="h-green">Connected (handle=1)</span></td><td>VOICE</td><td class="num">794</td><td class="num h-green">794 (100%)</td><td class="num">0</td></tr>
+    <tr><td><span class="h-amber">Missed (handle=0)</span></td><td>VCS</td><td class="num">808</td><td class="num">46 (5.7%)</td><td class="num h-red">762</td></tr>
+    <tr><td><span class="h-cyan">NULL handle (video invite)</span></td><td>VCS</td><td class="num">621</td><td class="num h-green">368 (59.3%)</td><td class="num h-amber">253</td></tr>
+    <tr><td><span class="h-green">Connected (handle=1)</span></td><td>PCS</td><td class="num">56</td><td class="num h-green">56 (100%)</td><td class="num">0</td></tr>
+    <tr><td><span class="h-cyan">NULL handle (video invite)</span></td><td>PCS</td><td class="num">41</td><td class="num">9 (22%)</td><td class="num h-red">32</td></tr>
+    <tr><td><span class="h-amber">Missed (handle=0)</span></td><td>PCS</td><td class="num">41</td><td class="num">0 (0%)</td><td class="num h-red">41</td></tr>
+  </table>
+
+  <div class="insight">
+    <strong>PSTN fallback is highly effective when it happens:</strong> 1,790 engagements with both video and PSTN legs connected <strong>100% of the time</strong>. 
+    However, <strong>662 engagements start with a NULL-handle video invite</strong> (customer didn't join). Of these, 377 (57%) are eventually connected 
+    via PSTN fallback, but <strong>285 never connect</strong> — an additional missed population not counted in the handle_flg=0 analysis. 
+    Combined with the 808+41 explicit misses, the <strong>true "customer not reached" population is ~1,134 engagements</strong> (handle=0 + NULL handle that never connected).
+  </div>
+
+  <div style="margin-top: 20px;">
+    <h3 style="font-size: 14px; margin-bottom: 12px;">PSTN Fallback: First-Leg Outcome Distribution</h3>
+    <div class="chart-wrap" style="height: 260px;"><canvas id="chartPSTN"></canvas></div>
   </div>
 </div>
 
@@ -285,8 +334,13 @@
     <strong>6. ~35% of missed-call customers have no reconnection yet.</strong> 337 customers haven't reconnected via any FS channel. 
     Many are recent (Feb–Mar), but this cohort represents potential at-risk engagements.
   </div>
+  <div class="insight" style="border-left-color: var(--cyan);">
+    <strong>7. PSTN fallback is effective — but 285 customers still slip through.</strong> 43% of FS appointments involve a video-then-phone 
+    fallback. When PSTN fallback fires, it connects 100%. But 662 engagements start with a NULL-handle video invite (customer no-show), 
+    and 285 of those never connect — an additional missed population beyond the 959 handle_flg=0 misses.
+  </div>
   <div class="insight" style="border-left-color: var(--purple);">
-    <strong>7. Product completion is too early to measure.</strong> Only 4 of 959 affected customers have completed any product. 
+    <strong>8. Product completion is too early to measure.</strong> Only 4 of 959 affected customers have completed any product. 
     86% have no PAM record yet — FS returns are still being prepared by experts. This will mature post-April deadline.
   </div>
 </div>
@@ -307,6 +361,10 @@
     </p>
     <p style="margin-top: 8px;"><strong>Customer missed:</strong> <code>customer_handle_flg = 0</code> — 1,050 calls across 959 unique customers (17.7%)</p>
     <p style="margin-top: 8px;"><strong>Customer callback:</strong> Any <code>initiated_type = 'INBOUND VOICE'</code> call (across <strong>all skill functions</strong>, not just FS) made by the same <code>auth_id</code> after the missed call. This broad definition captures customers who try to call back but are routed to non-FS queues (e.g., DIY Product Support).</p>
+    <p style="margin-top: 8px;"><strong>PSTN fallback:</strong> FS appointments begin as a video meeting. If the customer doesn't join, the expert can dial them via phone. 
+      In CCT data, this appears as an engagement with a <code>VOICE CALLBACK SCHEDULED</code> leg (initial video invite, <code>customer_handle_flg = NULL</code>) 
+      followed by a <code>VOICE</code> or subsequent <code>VOICE CALLBACK SCHEDULED</code> leg (phone dial). 
+      662 engagements had a NULL-handle first leg; 377 eventually connected, 285 never connected.</p>
     <p style="margin-top: 8px;"><strong>Expert retry:</strong> Any subsequent expert-initiated call on same engagement (excluding <code>INBOUND VOICE</code>)</p>
     <p style="margin-top: 8px;"><strong>Later FS call handled:</strong> Any <code>customer_handle_flg = 1</code> call with <code>interaction_skill_function = 'FS'</code> for same <code>auth_id</code> after the miss</p>
     <p style="margin-top: 8px;"><strong>Product completion:</strong> <code>tax_rpt.product_analytics_master</code> (<code>tax_year = 2025</code>), joined on <code>auth_id</code>. 
@@ -384,6 +442,27 @@
       scales: {
         x: { type: 'logarithmic', ticks: { color: '#8b8fa3', font: { size: 10 }, callback: function(v) { return v < 1 ? v + 'h' : v + 'h'; } }, grid: gridStyle, title: { display: true, text: 'Median hours (log scale)', color: '#8b8fa3', font: { size: 11 } } },
         y: { ticks: { color: '#8b8fa3', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+
+  // PSTN Fallback: first-leg outcome stacked bar
+  new Chart(document.getElementById('chartPSTN'), {
+    type: 'bar',
+    data: {
+      labels: ['Connected (1)', 'Missed (0)', 'NULL handle (video invite)'],
+      datasets: [
+        { label: 'Eventually Connected', data: [2642, 46, 377], backgroundColor: 'rgba(52, 211, 153, 0.8)', borderRadius: 4 },
+        { label: 'Never Connected', data: [0, 803, 285], backgroundColor: 'rgba(248, 113, 113, 0.8)', borderRadius: 4 }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8b8fa3', font: { size: 11 } } } },
+      scales: {
+        x: { stacked: true, ticks: baseFont, grid: gridStyle, title: { display: true, text: 'Engagements', color: '#8b8fa3', font: { size: 11 } } },
+        y: { stacked: true, ticks: { color: '#8b8fa3', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
       }
     }
   });
