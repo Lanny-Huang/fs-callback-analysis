@@ -96,10 +96,10 @@
   <div class="big-label">expert outbound calls made during FS appointments this tax year</div>
   <div class="context">
     Experts placed 5,928 outbound calls to customers during Full Service appointments (TYTD). 
-    <strong>82% were answered</strong> (4,878 calls). Of the 959 unique customers who missed calls (handle_flg=0), 
+    <strong>82% were answered</strong> (4,878 calls). Of the 959 unique customers who missed calls, 
     <strong>17.5% made an inbound call</strong> afterward — but <strong>71% went to non-FS queues</strong> 
-    (primarily DIY support). Additionally, <strong>662 PSTN fallback engagements</strong> (video no-show → phone dial) 
-    had a NULL first-leg handle — 285 of these never connected, expanding the true "unreached" population.
+    (primarily DIY support). Separately, <strong>621 appointments</strong> had the video pop but the customer never joined — 
+    experts dialed them via PSTN fallback 87% of the time, but <strong>254 were still never reached</strong>.
   </div>
 </div>
 
@@ -157,49 +157,62 @@
 
 <!-- PSTN Fallback Analysis -->
 <div class="card">
-  <h2>PSTN Fallback: Video No-Show → Phone Dial</h2>
-  <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">FS appointments start as a video meeting. If the customer doesn't join, the expert presses a button to call them via phone (PSTN fallback). These fallback dials appear as <code>VOICE CALLBACK SCHEDULED</code> with <code>customer_handle_flg = NULL</code> on the initial video leg, followed by a phone leg.</p>
+  <h2>PSTN Fallback: Video No-Show → Expert Dials Customer</h2>
+  <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">FS appointments start as a video meeting. If the customer doesn't join, the expert can press a button to call them via phone (PSTN fallback). This section isolates that exact scenario: <strong>621 engagements</strong> (588 customers) where the video popped but the customer never joined.</p>
   
   <div class="flow-diagram">
-    <div class="flow-node accent"><div class="fn-val">4,178</div><div class="fn-lbl">Total FS appt<br>engagements</div></div>
+    <div class="flow-node cyan"><div class="fn-val">621</div><div class="fn-lbl">Video started,<br>customer didn't join</div></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-node cyan"><div class="fn-val">1,790</div><div class="fn-pct" style="color:var(--cyan);">42.8%</div><div class="fn-lbl">Video + PSTN<br>Callback</div></div>
-    <div class="flow-arrow" style="font-size:14px; color: var(--muted);">|</div>
-    <div class="flow-node" style="border-color: var(--amber);"><div class="fn-val" style="color:var(--amber);">2,229</div><div class="fn-pct" style="color:var(--amber);">53.3%</div><div class="fn-lbl">Direct Phone<br>Only (no video)</div></div>
-    <div class="flow-arrow" style="font-size:14px; color: var(--muted);">|</div>
-    <div class="flow-node purple"><div class="fn-val">159</div><div class="fn-pct" style="color:var(--purple);">3.8%</div><div class="fn-lbl">Phone Callback<br>Only</div></div>
+    <div class="flow-node accent"><div class="fn-val">540</div><div class="fn-pct" style="color:var(--accent);">87%</div><div class="fn-lbl">Expert dialed<br>customer (PSTN)</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node green"><div class="fn-val">359</div><div class="fn-pct" style="color:var(--green);">58%</div><div class="fn-lbl">Customer<br>answered phone</div></div>
+  </div>
+  <div class="flow-diagram" style="margin-top: 8px;">
+    <div class="flow-node" style="min-width: 115px; visibility: hidden;"><div class="fn-val">.</div><div class="fn-lbl">.</div></div>
+    <div class="flow-arrow" style="visibility: hidden;">→</div>
+    <div class="flow-node" style="min-width: 115px; visibility: hidden;"><div class="fn-val">.</div><div class="fn-lbl">.</div></div>
+    <div class="flow-arrow">↘</div>
+    <div class="flow-node red"><div class="fn-val">173</div><div class="fn-pct" style="color:var(--red);">28%</div><div class="fn-lbl">Customer didn't<br>answer phone</div></div>
+  </div>
+  <div class="flow-diagram" style="margin-top: 8px;">
+    <div class="flow-node" style="min-width: 115px; visibility: hidden;"><div class="fn-val">.</div><div class="fn-lbl">.</div></div>
+    <div class="flow-arrow" style="visibility: hidden;">→</div>
+    <div class="flow-node amber"><div class="fn-val">81</div><div class="fn-pct" style="color:var(--amber);">13%</div><div class="fn-lbl">Expert never<br>dialed</div></div>
   </div>
 
-  <table style="margin-top: 16px;">
-    <tr><th>Engagement Type</th><th class="num">Engagements</th><th class="num">Unique Auths</th><th class="num">Ever Connected</th><th class="num">Never Connected</th><th class="num">Connect Rate</th></tr>
-    <tr><td>Video + PSTN Callback <span style="color:var(--cyan); font-size:11px;">(video first, then phone dial)</span></td><td class="num">1,790</td><td class="num">1,784</td><td class="num h-green">1,790</td><td class="num">0</td><td class="num h-green">100%</td></tr>
-    <tr><td>Direct Phone Only <span style="color:var(--muted); font-size:11px;">(no video leg)</span></td><td class="num">2,229</td><td class="num">1,963</td><td class="num">1,213</td><td class="num h-red">1,016</td><td class="num h-amber">54.4%</td></tr>
-    <tr><td>Phone Callback Only</td><td class="num">159</td><td class="num">147</td><td class="num">87</td><td class="num">72</td><td class="num h-amber">54.7%</td></tr>
+  <table style="margin-top: 20px;">
+    <tr><th>Step</th><th class="num">Engagements</th><th class="num">% of 621</th><th class="num">Median Time to Dial</th><th class="num">Median Talk Time</th></tr>
+    <tr><td>Customer didn't join video</td><td class="num">621</td><td class="num">100%</td><td class="num">—</td><td class="num">—</td></tr>
+    <tr><td>Expert dialed customer (PSTN fallback)</td><td class="num h-cyan">540</td><td class="num h-cyan">87.0%</td><td class="num h-green">4 min</td><td class="num">—</td></tr>
+    <tr><td>&nbsp;&nbsp;→ Customer answered the phone</td><td class="num h-green">359</td><td class="num h-green">57.8%</td><td class="num">4 min</td><td class="num h-green">6.5 min</td></tr>
+    <tr><td>&nbsp;&nbsp;→ Customer didn't answer phone either</td><td class="num h-red">173</td><td class="num h-red">27.9%</td><td class="num">4.1 min</td><td class="num">—</td></tr>
+    <tr><td>&nbsp;&nbsp;→ Phone leg NULL handle</td><td class="num" style="color: var(--muted);">8</td><td class="num" style="color: var(--muted);">1.3%</td><td class="num" style="color: var(--muted);">120 min</td><td class="num">—</td></tr>
+    <tr><td>Expert never dialed (no followup leg)</td><td class="num h-amber">81</td><td class="num h-amber">13.0%</td><td class="num">—</td><td class="num">—</td></tr>
   </table>
 
-  <h3 style="font-size: 14px; margin-top: 20px; margin-bottom: 12px;">What happens on the first leg of each engagement?</h3>
-  <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">The first leg's <code>customer_handle_flg</code> tells us whether the initial contact attempt was answered, missed, or a video invite (null):</p>
-  <table>
-    <tr><th>First Leg Outcome</th><th>Type</th><th class="num">Engagements</th><th class="num">Eventually Connected</th><th class="num">Never Connected</th></tr>
-    <tr><td><span class="h-green">Connected (handle=1)</span></td><td>VCS</td><td class="num">1,792</td><td class="num h-green">1,792 (100%)</td><td class="num">0</td></tr>
-    <tr><td><span class="h-green">Connected (handle=1)</span></td><td>VOICE</td><td class="num">794</td><td class="num h-green">794 (100%)</td><td class="num">0</td></tr>
-    <tr><td><span class="h-amber">Missed (handle=0)</span></td><td>VCS</td><td class="num">808</td><td class="num">46 (5.7%)</td><td class="num h-red">762</td></tr>
-    <tr><td><span class="h-cyan">NULL handle (video invite)</span></td><td>VCS</td><td class="num">621</td><td class="num h-green">368 (59.3%)</td><td class="num h-amber">253</td></tr>
-    <tr><td><span class="h-green">Connected (handle=1)</span></td><td>PCS</td><td class="num">56</td><td class="num h-green">56 (100%)</td><td class="num">0</td></tr>
-    <tr><td><span class="h-cyan">NULL handle (video invite)</span></td><td>PCS</td><td class="num">41</td><td class="num">9 (22%)</td><td class="num h-red">32</td></tr>
-    <tr><td><span class="h-amber">Missed (handle=0)</span></td><td>PCS</td><td class="num">41</td><td class="num">0 (0%)</td><td class="num h-red">41</td></tr>
-  </table>
+  <h3 style="font-size: 14px; margin-top: 24px; margin-bottom: 12px;">What happens to the ~240 customers who were never reached?</h3>
+  <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">Combining the 173 who didn't answer the phone + 81 where the expert never dialed = 240 unreached customers:</p>
 
-  <div class="insight">
-    <strong>PSTN fallback is highly effective when it happens:</strong> 1,790 engagements with both video and PSTN legs connected <strong>100% of the time</strong>. 
-    However, <strong>662 engagements start with a NULL-handle video invite</strong> (customer didn't join). Of these, 377 (57%) are eventually connected 
-    via PSTN fallback, but <strong>285 never connect</strong> — an additional missed population not counted in the handle_flg=0 analysis. 
-    Combined with the 808+41 explicit misses, the <strong>true "customer not reached" population is ~1,134 engagements</strong> (handle=0 + NULL handle that never connected).
+  <div class="flow-diagram">
+    <div class="flow-node red"><div class="fn-val">240</div><div class="fn-lbl">Unreached after<br>video no-show</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" style="border-color: var(--red);"><div class="fn-val" style="color: var(--red);">41</div><div class="fn-pct" style="color:var(--red);">17.1%</div><div class="fn-lbl">Made an<br>inbound call</div></div>
+    <div class="flow-arrow" style="font-size:14px; color: var(--muted);">|</div>
+    <div class="flow-node green"><div class="fn-val">129</div><div class="fn-pct" style="color:var(--green);">53.8%</div><div class="fn-lbl">Later FS call<br>handled</div></div>
+    <div class="flow-arrow" style="font-size:14px; color: var(--muted);">|</div>
+    <div class="flow-node purple"><div class="fn-val">102</div><div class="fn-pct" style="color:var(--purple);">42.5%</div><div class="fn-lbl">No reconnection<br>yet</div></div>
+  </div>
+
+  <div class="insight" style="margin-top: 16px;">
+    <strong>PSTN fallback works well when experts use it:</strong> 87% of the time, the expert dials the customer within a <strong>median of 4 minutes</strong>. 
+    When they do, <strong>66% answer</strong> (359 of 540). But the full picture shows <strong>254 customers</strong> (173 missed phone + 81 no dial) are not reached 
+    in this engagement. Of those, about half reconnect through a later FS call, but <strong>102 customers (42%) remain unreached</strong>. 
+    This is an additional missed population on top of the 959 explicit missed calls (handle_flg=0).
   </div>
 
   <div style="margin-top: 20px;">
-    <h3 style="font-size: 14px; margin-bottom: 12px;">PSTN Fallback: First-Leg Outcome Distribution</h3>
-    <div class="chart-wrap" style="height: 260px;"><canvas id="chartPSTN"></canvas></div>
+    <h3 style="font-size: 14px; margin-bottom: 12px;">PSTN Fallback Funnel</h3>
+    <div class="chart-wrap" style="height: 280px;"><canvas id="chartPSTN"></canvas></div>
   </div>
 </div>
 
@@ -335,9 +348,9 @@
     Many are recent (Feb–Mar), but this cohort represents potential at-risk engagements.
   </div>
   <div class="insight" style="border-left-color: var(--cyan);">
-    <strong>7. PSTN fallback is effective — but 285 customers still slip through.</strong> 43% of FS appointments involve a video-then-phone 
-    fallback. When PSTN fallback fires, it connects 100%. But 662 engagements start with a NULL-handle video invite (customer no-show), 
-    and 285 of those never connect — an additional missed population beyond the 959 handle_flg=0 misses.
+    <strong>7. PSTN fallback works — but 254 customers still fall through.</strong> When a customer doesn't join the video, 
+    87% of the time the expert dials them within 4 minutes. 66% of those dials connect. But 173 customers don't answer the phone either, 
+    and in 81 cases the expert never dials at all — leaving 254 unreached. About half reconnect later, but <strong>102 remain with no contact</strong>.
   </div>
   <div class="insight" style="border-left-color: var(--purple);">
     <strong>8. Product completion is too early to measure.</strong> Only 4 of 959 affected customers have completed any product. 
@@ -446,23 +459,33 @@
     }
   });
 
-  // PSTN Fallback: first-leg outcome stacked bar
+  // PSTN Fallback funnel bar chart
   new Chart(document.getElementById('chartPSTN'), {
     type: 'bar',
     data: {
-      labels: ['Connected (1)', 'Missed (0)', 'NULL handle (video invite)'],
-      datasets: [
-        { label: 'Eventually Connected', data: [2642, 46, 377], backgroundColor: 'rgba(52, 211, 153, 0.8)', borderRadius: 4 },
-        { label: 'Never Connected', data: [0, 803, 285], backgroundColor: 'rgba(248, 113, 113, 0.8)', borderRadius: 4 }
-      ]
+      labels: ['Video no-show', 'Expert dialed (PSTN)', 'Answered phone', 'Didn\'t answer phone', 'Expert never dialed', 'Later FS handled', 'No reconnection'],
+      datasets: [{
+        label: 'Engagements',
+        data: [621, 540, 359, 173, 81, 129, 102],
+        backgroundColor: [
+          'rgba(34, 211, 238, 0.7)',
+          'rgba(165, 180, 252, 0.7)',
+          'rgba(52, 211, 153, 0.8)',
+          'rgba(248, 113, 113, 0.8)',
+          'rgba(251, 191, 36, 0.7)',
+          'rgba(52, 211, 153, 0.5)',
+          'rgba(192, 132, 252, 0.7)'
+        ],
+        borderRadius: 4
+      }]
     },
     options: {
       indexAxis: 'y',
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#8b8fa3', font: { size: 11 } } } },
+      plugins: { legend: { display: false } },
       scales: {
-        x: { stacked: true, ticks: baseFont, grid: gridStyle, title: { display: true, text: 'Engagements', color: '#8b8fa3', font: { size: 11 } } },
-        y: { stacked: true, ticks: { color: '#8b8fa3', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+        x: { ticks: baseFont, grid: gridStyle, title: { display: true, text: 'Engagements', color: '#8b8fa3', font: { size: 11 } } },
+        y: { ticks: { color: '#8b8fa3', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
       }
     }
   });
